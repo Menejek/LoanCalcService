@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
-public class ErrorResponse {
-    private LocalDateTime time;
-    private int status;
-    private String message;
-    private String path;
-    private List<String> details;
+public final class ErrorResponse {
+    private final LocalDateTime time;
+    private final int status;
+    private final String message;
+    private final String path;
+    private final List<String> details;
 
     public List<String> getDetails() {
         return details;

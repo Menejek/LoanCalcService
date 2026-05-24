@@ -23,11 +23,9 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
             throw new IllegalArgumentException("Request cannot be null.");
         }
 
-        validateRequestParameters(request);
-
-        BigDecimal totalCredit = request.getTotalCredit();
-        BigDecimal annualRate = request.getAnnualRate();
-        int monthCount = request.getMonthCount();
+        BigDecimal totalCredit = request.totalCredit();
+        BigDecimal annualRate = request.annualRate();
+        int monthCount = request.monthCount();
 
         return calculateLoan(totalCredit, monthCount, annualRate);
     }
@@ -35,18 +33,6 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
     @Override
     public void saveUser(User user) {
             // TODO
-    }
-
-    private void validateRequestParameters(LoanCalculationRequest request) {
-        if (request.getTotalCredit().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Total credit can't be less than 0.");
-        }
-        if (request.getAnnualRate().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Annual rate can't be less than 0.");
-        }
-        if (request.getMonthCount() < 1 || request.getMonthCount() > 360) {
-            throw new IllegalArgumentException("Monthly count can't be less than 1 or more than 360.");
-        }
     }
 
     private LoanCalculationResponse calculateLoan(BigDecimal totalCredit, Integer monthCount, BigDecimal annualRate) {
