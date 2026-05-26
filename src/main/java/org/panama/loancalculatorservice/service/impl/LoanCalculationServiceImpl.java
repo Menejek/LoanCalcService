@@ -1,41 +1,63 @@
 package org.panama.loancalculatorservice.service.impl;
 
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.panama.loancalculatorservice.constants.StatusService;
 import org.panama.loancalculatorservice.dto.request.LoanCalculationRequest;
 import org.panama.loancalculatorservice.dto.response.LoanCalculationResponse;
-import org.panama.loancalculatorservice.model.User;
+import org.panama.loancalculatorservice.model.LoanApplication;
+import org.panama.loancalculatorservice.repository.LoanApplicationRepository;
 import org.panama.loancalculatorservice.service.LoanCalculationService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class LoanCalculationServiceImpl implements LoanCalculationService {
 
-    private final int FINAL_SCALE = 2;
-    private final int LOAN_SCALE = 10;
-    private final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    private final LoanApplicationRepository repository;
+
+    private static final int FINAL_SCALE = 2;
+    private static final int LOAN_SCALE = 10;
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     @Override
+    @Transactional
     public LoanCalculationResponse calculate(LoanCalculationRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request cannot be null.");
         }
 
+        UUID idempotencyKey = UUID.fromString(request.idempotencyKey());
+        Optional<LoanApplication> application = repository.findByIdempotencyKey(idempotencyKey);
+        if (application.isPresent()){
+            return new LoanCalculationResponse(
+                    application.get().getMonthlyPayment(),
+                    application.get().getApplicationId().toString(),
+                    application.get().getStatus().name(),
+                    "Повторный запрос"
+            );
+        }
+
+        UUID applicationId = UUID.randomUUID();
+
         BigDecimal totalCredit = request.totalCredit();
         BigDecimal annualRate = request.annualRate();
         int monthCount = request.monthCount();
 
-        return calculateLoan(totalCredit, monthCount, annualRate);
+        BigDecimal monthlyPayment = calculateLoan(totalCredit, monthCount, annualRate);
+
+        repository.save(generateLoanApplication(request, monthlyPayment,idempotencyKey, applicationId));
+
+        return new LoanCalculationResponse(monthlyPayment, applicationId.toString(), StatusService.UNDER_REVIEW.name(), "Заявка принята в обработку");
     }
 
-    @Override
-    public void saveUser(User user) {
-            // TODO
-    }
-
-    private LoanCalculationResponse calculateLoan(BigDecimal totalCredit, Integer monthCount, BigDecimal annualRate) {
+    private BigDecimal calculateLoan(BigDecimal totalCredit, Integer monthCount, BigDecimal annualRate) {
         BigDecimal rawPayment;
 
         BigDecimal monthlyRate = annualRate.divide(new BigDecimal("100"), LOAN_SCALE, ROUNDING_MODE).divide(new BigDecimal("12"), LOAN_SCALE, ROUNDING_MODE);
@@ -53,10 +75,20 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
 
             rawPayment = totalCredit.multiply(annuityCoefficient).setScale(FINAL_SCALE, ROUNDING_MODE);
         }
-        BigDecimal totalAmountWillRefund = rawPayment.multiply(BigDecimal.valueOf(monthCount));
 
-        BigDecimal percentages = totalAmountWillRefund.subtract(totalCredit);
+        return rawPayment.setScale(FINAL_SCALE, ROUNDING_MODE);
+    }
 
-        return new LoanCalculationResponse(rawPayment.setScale(FINAL_SCALE, ROUNDING_MODE), percentages.setScale(FINAL_SCALE, ROUNDING_MODE), totalAmountWillRefund.setScale(FINAL_SCALE, ROUNDING_MODE), annualRate.setScale(FINAL_SCALE, ROUNDING_MODE));
+    private LoanApplication generateLoanApplication(LoanCalculationRequest request,
+                                                    BigDecimal rawPayment,
+                                                    UUID idempotencyKey,
+                                                    UUID applicationId) {
+        return new LoanApplication(idempotencyKey,
+                applicationId,
+                request.totalCredit(),
+                request.annualRate(),
+                request.monthCount(),
+                StatusService.UNDER_REVIEW,
+                rawPayment);
     }
 }
