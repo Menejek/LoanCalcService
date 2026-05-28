@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import org.panama.loancalculatorservice.exception.exceptions.ErrorResponse;
+import org.panama.loancalculatorservice.exception.exceptions.LoanApplicationNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -94,5 +95,16 @@ public class GlobalExceptionHandler {
                 path(request.getRequestURI()).
                 build();
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(LoanApplicationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLoanApplicationNotFoundException(LoanApplicationNotFoundException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder().
+                time(LocalDateTime.now()).
+                status(HttpStatus.NOT_FOUND.value()).
+                message("Application not found").
+                path(request.getRequestURI()).
+                build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 }

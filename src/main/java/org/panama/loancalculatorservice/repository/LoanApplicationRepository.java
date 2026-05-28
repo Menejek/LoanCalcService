@@ -7,5 +7,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface LoanApplicationRepository extends JpaRepository {
+
     Optional<LoanApplication> findByIdempotencyKey(UUID idempotencyKey);
+
+    Optional<LoanApplication> findByApplicationId(UUID applicationId);
 }

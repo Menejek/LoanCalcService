@@ -2,12 +2,14 @@ package org.panama.loancalculatorservice.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.panama.loancalculatorservice.constants.LoanTrigger;
 import org.panama.loancalculatorservice.constants.StatusService;
 import org.panama.loancalculatorservice.dto.request.LoanCalculationRequest;
 import org.panama.loancalculatorservice.dto.response.LoanCalculationResponse;
 import org.panama.loancalculatorservice.model.LoanApplication;
 import org.panama.loancalculatorservice.repository.LoanApplicationRepository;
 import org.panama.loancalculatorservice.service.LoanCalculationService;
+import org.panama.loancalculatorservice.service.statemachine.LoanStatusMachine;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class LoanCalculationServiceImpl implements LoanCalculationService {
 
     private final LoanApplicationRepository repository;
+    private final LoanStatusMachine statusMachine;
 
     private static final int FINAL_SCALE = 2;
     private static final int LOAN_SCALE = 10;
@@ -88,7 +91,7 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
                 request.totalCredit(),
                 request.annualRate(),
                 request.monthCount(),
-                StatusService.UNDER_REVIEW,
+                statusMachine.transition(null, LoanTrigger.CREATE),
                 rawPayment);
     }
 }
