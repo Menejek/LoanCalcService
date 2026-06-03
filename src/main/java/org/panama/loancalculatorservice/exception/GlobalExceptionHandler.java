@@ -3,6 +3,7 @@ package org.panama.loancalculatorservice.exception;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.panama.loancalculatorservice.exception.exceptions.ErrorResponse;
 import org.panama.loancalculatorservice.exception.exceptions.LoanApplicationNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @RestControllerAdvice
 @ApiResponses(value = {
         @ApiResponse(responseCode = "400", description = "Ошибка в клиентском запросе. Вызвана некорректным JSON, нарушением типов данных или не прохождением границ валидации"),
@@ -39,6 +41,11 @@ public class GlobalExceptionHandler {
                 path(request.getRequestURI()).
                 details(errors).
                 build();
+        log.warn("Клиент прислал невалидные данные. Метод={}, Путь={}, Поля={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                errors,
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -50,6 +57,10 @@ public class GlobalExceptionHandler {
                 message("Invalid request body").
                 path(request.getRequestURI()).
                 build();
+        log.warn("Сервер не смог прочитать или распознать тело запроса. Метод={}, Путь={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -61,6 +72,10 @@ public class GlobalExceptionHandler {
                 message(ex.getMessage()).
                 path(request.getRequestURI()).
                 build();
+        log.warn("Клиент прислал некорректные данные в запросе. Метод={}, Путь={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -72,6 +87,10 @@ public class GlobalExceptionHandler {
                 .message("Unsupported media type").
                 path(request.getRequestURI()).
                 build();
+        log.warn("Несовпадение типов данных в запросе и ожидаемых сервером. Метод={}, Путь={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
 
@@ -83,6 +102,10 @@ public class GlobalExceptionHandler {
                 message("Method not allowed").
                 path(request.getRequestURI()).
                 build();
+        log.warn("Выбран неподходящий HTTP-метод для выполнения текущего запроса. Метод={}, Путь={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
@@ -94,6 +117,10 @@ public class GlobalExceptionHandler {
                 message("Internal server error").
                 path(request.getRequestURI()).
                 build();
+        log.error("Uncaught exception",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -105,6 +132,10 @@ public class GlobalExceptionHandler {
                 message("Application not found").
                 path(request.getRequestURI()).
                 build();
+        log.warn("Заявка на кредит не найдена в базе данных. Метод={}, Путь={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                ex);
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 }

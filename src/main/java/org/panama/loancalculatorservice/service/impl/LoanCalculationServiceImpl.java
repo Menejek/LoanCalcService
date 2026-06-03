@@ -63,7 +63,7 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
         LoanApplication applicationNew = generateLoanApplication(request, monthlyPayment, idempotencyKey, applicationId);
 
         repository.save(applicationNew);
-        log.info("Запрос с idempotencyKey={}, applicationId={}, status={} успешно сохранен в базу данных", application.getIdempotencyKey(), application.getApplicationId(), application.getStatus());
+        log.info("Запрос с idempotencyKey={}, applicationId={}, status={} успешно сохранен в базу данных", applicationNew.getIdempotencyKey(), applicationNew.getApplicationId(), applicationNew.getStatus());
 
         return new LoanCalculationResponse(monthlyPayment, applicationId.toString(), applicationNew.getStatus().name(), "Заявка принята в обработку");
     }
