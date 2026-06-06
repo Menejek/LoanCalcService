@@ -1,16 +1,15 @@
 package org.panama.loancalculatorservice.service.impl;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.panama.loancalculatorservice.constants.LoanTrigger;
 import org.panama.loancalculatorservice.dto.request.LoanCalculationRequest;
-import org.panama.loancalculatorservice.dto.response.LoanCalculationResponse;
 import org.panama.loancalculatorservice.model.LoanApplication;
 import org.panama.loancalculatorservice.repository.LoanApplicationRepository;
 import org.panama.loancalculatorservice.service.LoanCalculationService;
 import org.panama.loancalculatorservice.service.statemachine.LoanStatusMachine;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -31,25 +30,8 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
 
     @Override
     @Transactional
-    public LoanCalculationResponse calculate(LoanCalculationRequest request) {
-        if (request == null) {
-            log.error("Получен невалидный запрос: {}", request);
-            throw new IllegalArgumentException("Request cannot be null.");
-        }
-
+    public LoanApplication calculate(LoanCalculationRequest request) {
         UUID idempotencyKey = UUID.fromString(request.idempotencyKey());
-        log.debug("Начало обработки заявки с ключом: {}", idempotencyKey);
-
-        LoanApplication application = repository.findByIdempotencyKey(idempotencyKey).orElse(null);
-        if (application != null) {
-            log.info("Запрос с idempotencyKey={}, applicationId={}, status={} уже есть в базе", application.getIdempotencyKey(), application.getApplicationId(), application.getStatus());
-            return new LoanCalculationResponse(
-                    application.getMonthlyPayment(),
-                    application.getApplicationId().toString(),
-                    application.getStatus().name(),
-                    "Повторный запрос"
-            );
-        }
 
         UUID applicationId = UUID.randomUUID();
 
@@ -65,7 +47,7 @@ public class LoanCalculationServiceImpl implements LoanCalculationService {
         repository.save(applicationNew);
         log.info("Запрос с idempotencyKey={}, applicationId={}, status={} успешно сохранен в базу данных", applicationNew.getIdempotencyKey(), applicationNew.getApplicationId(), applicationNew.getStatus());
 
-        return new LoanCalculationResponse(monthlyPayment, applicationId.toString(), applicationNew.getStatus().name(), "Заявка принята в обработку");
+        return applicationNew;
     }
 
     private BigDecimal calculateLoan(BigDecimal totalCredit, Integer monthCount, BigDecimal annualRate) {

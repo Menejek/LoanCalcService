@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.panama.loancalculatorservice.dto.request.LoanCalculationRequest;
 import org.panama.loancalculatorservice.dto.response.LoanCalculationResponse;
-import org.panama.loancalculatorservice.service.LoanCalculationService;
+import org.panama.loancalculatorservice.service.impl.CacheLoanCalcService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,13 +20,13 @@ import static org.panama.loancalculatorservice.constants.ApiConstant.*;
 @RequestMapping(LOAN_API_CONTROLLER)
 public class LoanController {
 
-    private final LoanCalculationService loanCalculationService;
+    private final CacheLoanCalcService cacheService;
 
     @PostMapping(value = LOAN_POST_CALCULATION,
     consumes = MediaType.APPLICATION_JSON_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE)
     public LoanCalculationResponse calculate(@RequestBody @Valid LoanCalculationRequest request){
         log.debug("Запрос с idempotencyKey={} получен", request.idempotencyKey());
-        return loanCalculationService.calculate(request);
+        return cacheService.calculate(request);
     }
 }
