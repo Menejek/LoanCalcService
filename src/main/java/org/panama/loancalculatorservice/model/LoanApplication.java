@@ -23,35 +23,44 @@ public class LoanApplication {
     private long id;
 
     @Column(nullable = false,
-    columnDefinition = "uuid")
+    unique = true,
+    columnDefinition = "uuid",
+    name = "idempotency_key")
     private UUID idempotencyKey;
 
     @Column(nullable = false,
     columnDefinition = "uuid",
     unique = true,
-    updatable = false)
+    updatable = false,
+    name = "application_id")
     private UUID applicationId;
 
-    @Column(nullable = false)
+    @Column(nullable = false,
+    name = "total_credit")
     private BigDecimal totalCredit;
 
-    @Column(nullable = false)
+    @Column(nullable = false,
+    name = "yearly_interest_rate")
     private BigDecimal yearlyInterestRate;
 
-    @Column(nullable = false)
+    @Column(nullable = false,
+    name = "monthly_count")
     private Integer monthlyCount;
 
     @Enumerated(EnumType.STRING)
     private StatusService status;
 
     @CreationTimestamp
-    @Column(nullable = false)
-    private LocalDateTime createAt;
+    @Column(nullable = false,
+    name = "created_at")
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updateAt;
 
-    @Column(nullable = false)
+    @Column(nullable = false,
+    name = "monthly_payment")
     private BigDecimal monthlyPayment;
 
     public LoanApplication (UUID idempotencyKey,
