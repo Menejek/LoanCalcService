@@ -8,7 +8,7 @@ CREATE TABLE outbox (
                     event_type VARCHAR(255) NOT NULL,
                     status VARCHAR(255) CHECK (status IN(
                                                         'PENDING',
-                                                        'SEND',
+                                                        'SENT',
                                                         'FAILED'
 
                     )),
