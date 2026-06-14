@@ -36,4 +36,14 @@ public class OutboxEvent {
     @Column(name = "created_at",
     nullable = false)
     private LocalDateTime createdAt;
+
+    public OutboxEvent(UUID applicationId, String loanCreated, String payloadJson, String status, LocalDateTime now) {
+        this.aggregateId = applicationId;
+        this.eventType = loanCreated;
+        this.payload = payloadJson;
+        this.status = status;
+        this.createdAt = now;
+    }
+
+    public OutboxEvent() {}
 }
