@@ -12,7 +12,9 @@ CREATE TABLE outbox (
                                                         'FAILED'
 
                     )),
-                    created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    retry_count INTEGER DEFAULT 0,
+                    error_message TEXT
                 );
 
 CREATE INDEX idx_outbox_status ON outbox (status);

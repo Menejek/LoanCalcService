@@ -4,6 +4,8 @@ package org.panama.loancalculatorservice.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -26,8 +28,8 @@ public class OutboxEvent {
     nullable = false)
     private String eventType;
 
-    @Column(nullable = false,
-    columnDefinition = "jsonb")
+    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.JSON)
     private String payload;
 
     @Column(nullable = false)
@@ -36,6 +38,13 @@ public class OutboxEvent {
     @Column(name = "created_at",
     nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "retry_count",
+    nullable = false)
+    private Integer retryCount;
+
+    @Column(name = "error_message")
+    private String errorMessage;
 
     public OutboxEvent(UUID applicationId, String loanCreated, String payloadJson, String status, LocalDateTime now) {
         this.aggregateId = applicationId;
